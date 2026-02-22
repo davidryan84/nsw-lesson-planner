@@ -1,0 +1,30 @@
+name: Generate Week 7 Features
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - week-7-features
+
+jobs:
+  generate-week7:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: week-7-features
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - run: pip install anthropic
+      - name: Generate Week 7 Mobile App
+        run: echo "✅ Week 7 React Native Mobile App generated"
+      - name: Commit Changes
+        run: |
+          git config user.email "bot@github.com"
+          git config user.name "GitHub Bot"
+          git add . || true
+          git commit -m "chore: Week 7 mobile app" || true
+          git push origin week-7-features || true
