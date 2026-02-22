@@ -1,0 +1,14 @@
+name: Generate Week 3 Features
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - week-3-features
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "Week 3 features"
