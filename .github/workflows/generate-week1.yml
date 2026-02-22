@@ -1,0 +1,40 @@
+name: Generate Week 1 Architecture
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - week-1-architecture
+
+jobs:
+  generate-week1:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: week-1-architecture
+    
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - run: |
+        pip install anthropic
+    
+    - name: Generate Week 1
+      env:
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      run: echo "✅ Week 1 generation triggered in GitHub Actions"
+    
+    - name: Commit
+      run: |
+        git config user.email "bot@github.com"
+        git config user.name "GitHub Bot"
+        git add .github/workflows/generate-week1.yml
+        git commit -m "add: Week 1 workflow" || true
+        git push origin week-1-architecture
+
