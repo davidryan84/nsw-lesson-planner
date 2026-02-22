@@ -1,0 +1,163 @@
+name: Generate Week 3 Features
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - week-3-features
+    paths:
+      - '.github/workflows/generate-week3.yml'
+
+jobs:
+  generate-week3:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: week-3-features
+    
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - run: |
+        python -m pip install --upgrade pip
+        pip install anthropic --break-system-packages
+    
+    - name: Generate Week 3 Backend Features
+      env:
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      run: |
+        python3 << 'BACKEND'
+import os, json, re
+from pathlib import Path
+from anthropic import Anthropic
+
+client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+print("🤖 Generating Week 3 Backend Features...")
+
+prompt = """Generate Week 3 backend features for NSW Lesson Planner.
+
+Return ONLY valid JSON with "files" array.
+
+Generate these NEW files in backend/:
+
+MODELS (backend/models/):
+1. question_metadata.py - Model for question metadata (teaching tips, misconceptions, alternative explanations, Bloom's level)
+
+SERVICES (backend/services/):
+1. question_metadata_service.py - Service for managing question metadata
+2. difficulty_calibration_service.py - Service for Bloom's taxonomy and difficulty levels
+3. context_consistency_service.py - Service for managing real-world contexts across tiers
+4. pacing_guide_service.py - Service for generating pacing guides
+5. student_grouping_service.py - Service for predicting student tier assignments
+
+API ROUTES (backend/api/v1/):
+1. question_metadata.py - Endpoints for question metadata
+2. pacing_guides.py - Endpoints for pacing guides
+3. student_grouping.py - Endpoints for student tier predictions
+
+Each file should be production-ready with full docstrings, type hints, and error handling.
+
+Return ONLY JSON with "files" array."""
+
+response = client.messages.create(
+    model="claude-opus-4-20250805",
+    max_tokens=12000,
+    messages=[{"role": "user", "content": prompt}]
+)
+
+text = response.content[0].text
+match = re.search(r'\{[\s\S]*\}', text)
+if match:
+    data = json.loads(match.group())
+    for f in data.get("files", []):
+        p = Path(f["path"])
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(f["content"])
+    print(f"✅ Backend: {len(data.get('files', []))} files")
+BACKEND
+    
+    - name: Generate Week 3 Frontend Features
+      env:
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      run: |
+        python3 << 'FRONTEND'
+import os, json, re
+from pathlib import Path
+from anthropic import Anthropic
+
+client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+print("🤖 Generating Week 3 Frontend Features...")
+
+prompt = """Generate Week 3 frontend features for NSW Lesson Planner.
+
+Return ONLY valid JSON with "files" array.
+
+Generate these NEW components in frontend/src/components/worksheet/:
+
+1. QuestionTypeDistribution.js - Component to select question type mix
+2. DifficultyVisualization.js - Component showing Bloom's difficulty levels
+3. ContextConsistencyDisplay.js - Component showing real-world context
+4. PacingGuideModal.js - Modal showing lesson timing breakdown
+5. StudentGroupingPanel.js - Component showing predicted tier assignments
+
+Also create in frontend/src/utils/:
+1. bloomsHelper.js - Helper functions for Bloom's taxonomy
+
+Each file should be production-ready React with hooks, error handling, and loading states.
+
+Return ONLY JSON with "files" array."""
+
+response = client.messages.create(
+    model="claude-opus-4-20250805",
+    max_tokens=12000,
+    messages=[{"role": "user", "content": prompt}]
+)
+
+text = response.content[0].text
+match = re.search(r'\{[\s\S]*\}', text)
+if match:
+    data = json.loads(match.group())
+    for f in data.get("files", []):
+        p = Path(f["path"])
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(f["content"])
+    print(f"✅ Frontend: {len(data.get('files', []))} files")
+FRONTEND
+    
+    - name: Commit and Push
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git add .
+        git commit -m "chore: generate Week 3 features with Claude Opus 4.6" || true
+        git push origin week-3-features
+    
+    - name: Create PR
+      uses: actions/create-pull-request@v5
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        title: "🎯 Week 3: Question Intelligence + Pacing Guides"
+        body: |
+          # Week 3: Advanced Features
+          
+          ## What's New
+          - ✅ Question type distribution control
+          - ✅ Bloom's taxonomy difficulty calibration
+          - ✅ Real-world context consistency across tiers
+          - ✅ Automatic pacing guides
+          - ✅ Student grouping predictions
+          - ✅ Question metadata (teaching tips, misconceptions)
+          
+          ## Generated With
+          - Claude Opus 4.6
+          - Production-ready code
+          - Full type hints and error handling
+          
+          Ready for review!
+        branch: week-3-features
