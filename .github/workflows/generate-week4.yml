@@ -1,0 +1,140 @@
+name: Generate Week 4 Features
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - week-4-features
+    paths:
+      - '.github/workflows/generate-week4.yml'
+
+jobs:
+  generate-week4:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: week-4-features
+    
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - run: pip install anthropic --break-system-packages
+    
+    - name: Generate Week 4 Backend
+      env:
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      run: |
+        python3 << 'BACKEND'
+import os, json, re
+from pathlib import Path
+from anthropic import Anthropic
+
+client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+print("🤖 Generating Week 4 Backend...")
+
+prompt = """Generate Week 4 backend features for NSW Lesson Planner - Evidence & Observation Tracking.
+
+Return ONLY valid JSON with "files" array.
+
+Generate in backend/:
+
+MODELS (backend/models/):
+1. evidence_attachment.py - Model for file/photo attachments
+2. mastery_level.py - Model for tracking mastery levels
+
+SERVICES (backend/services/):
+1. evidence_service_enhanced.py - Enhanced service with photo/file handling
+2. mastery_tracking_service.py - Service for mastery level calculations
+3. file_storage_service.py - Service for S3 file uploads
+
+API ROUTES (backend/api/v1/):
+1. evidence_enhanced.py - Endpoints for evidence with attachments
+2. mastery_tracking.py - Endpoints for mastery data
+
+All production-ready with full docstrings and type hints.
+
+Return ONLY JSON with "files" array."""
+
+response = client.messages.create(
+    model="claude-opus-4-20250805",
+    max_tokens=10000,
+    messages=[{"role": "user", "content": prompt}]
+)
+
+text = response.content[0].text
+match = re.search(r'\{[\s\S]*\}', text)
+if match:
+    data = json.loads(match.group())
+    for f in data.get("files", []):
+        p = Path(f["path"])
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(f["content"])
+    print(f"✅ Backend: {len(data.get('files', []))} files")
+BACKEND
+    
+    - name: Generate Week 4 Frontend
+      env:
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      run: |
+        python3 << 'FRONTEND'
+import os, json, re
+from pathlib import Path
+from anthropic import Anthropic
+
+client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+print("🤖 Generating Week 4 Frontend...")
+
+prompt = """Generate Week 4 frontend components for evidence tracking.
+
+Return ONLY valid JSON with "files" array.
+
+Generate in frontend/src/components/evidence/:
+
+1. EvidenceUploadForm.js - Form with photo/file upload
+2. PhotoCapture.js - Camera capture component
+3. MasteryLevelSelector.js - Visual mastery level picker
+4. EvidencePreview.js - Preview before submission
+5. AttachmentViewer.js - View uploaded files
+
+All production-ready React with hooks and error handling.
+
+Return ONLY JSON with "files" array."""
+
+response = client.messages.create(
+    model="claude-opus-4-20250805",
+    max_tokens=10000,
+    messages=[{"role": "user", "content": prompt}]
+)
+
+text = response.content[0].text
+match = re.search(r'\{[\s\S]*\}', text)
+if match:
+    data = json.loads(match.group())
+    for f in data.get("files", []):
+        p = Path(f["path"])
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(f["content"])
+    print(f"✅ Frontend: {len(data.get('files', []))} files")
+FRONTEND
+    
+    - name: Commit and Push
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git add .
+        git commit -m "chore: generate Week 4 features" || true
+        git push origin week-4-features
+    
+    - name: Create PR
+      uses: actions/create-pull-request@v5
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        title: "📸 Week 4: Evidence & Observation Tracking"
+        body: "Week 4 features: Photo/file uploads, mastery tracking, evidence filtering"
+        branch: week-4-features
