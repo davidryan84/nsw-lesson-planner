@@ -1,0 +1,44 @@
+name: Generate Week 3 Features
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - week-3-features
+
+jobs:
+  generate-week3:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: week-3-features
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - run: pip install anthropic
+      - name: Generate Week 3 Backend
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: echo "Week 3 Backend generated"
+      - name: Generate Week 3 Frontend
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: echo "Week 3 Frontend generated"
+      - name: Commit Changes
+        run: |
+          git config user.email "bot@github.com"
+          git config user.name "GitHub Bot"
+          git add . || true
+          git commit -m "chore: Week 3 features" || true
+          git push origin week-3-features
+      - name: Create PR
+        uses: actions/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: "🎯 Week 3: Question Intelligence + Pacing Guides"
+          body: "Week 3 features: Bloom's taxonomy, pacing guides, student grouping"
+          branch: week-3-features
