@@ -1,0 +1,131 @@
+name: Generate Week 6 Features
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - week-6-features
+    paths:
+      - '.github/workflows/generate-week6.yml'
+
+jobs:
+  generate-week6:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: week-6-features
+    
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - run: pip install anthropic --break-system-packages
+    
+    - name: Generate Week 6 Backend
+      env:
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      run: |
+        python3 << 'BACKEND'
+import os, json, re
+from pathlib import Path
+from anthropic import Anthropic
+
+client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+print("🤖 Generating Week 6 Backend...")
+
+prompt = """Generate Week 6 backend - Weekly Planner Enhancements.
+
+Return ONLY valid JSON with "files" array.
+
+Generate in backend/services/:
+1. planner_optimization_service.py - Optimize weekly planning
+2. resource_allocation_service.py - Allocate resources
+3. conflict_detection_service.py - Detect scheduling conflicts
+
+Generate in backend/api/v1/:
+1. planner_enhanced.py - Enhanced planner endpoints
+
+All production-ready with full docstrings.
+
+Return ONLY JSON with "files" array."""
+
+response = client.messages.create(
+    model="claude-opus-4-20250805",
+    max_tokens=10000,
+    messages=[{"role": "user", "content": prompt}]
+)
+
+text = response.content[0].text
+match = re.search(r'\{[\s\S]*\}', text)
+if match:
+    data = json.loads(match.group())
+    for f in data.get("files", []):
+        p = Path(f["path"])
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(f["content"])
+    print(f"✅ Backend: {len(data.get('files', []))} files")
+BACKEND
+    
+    - name: Generate Week 6 Frontend
+      env:
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      run: |
+        python3 << 'FRONTEND'
+import os, json, re
+from pathlib import Path
+from anthropic import Anthropic
+
+client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+print("🤖 Generating Week 6 Frontend...")
+
+prompt = """Generate Week 6 frontend - Weekly Planner Enhancements.
+
+Return ONLY valid JSON with "files" array.
+
+Generate in frontend/src/components/planner/:
+1. PlannerOptimizer.js - Optimize weekly plan
+2. ResourceAllocator.js - Allocate resources
+3. ConflictDetector.js - Show scheduling conflicts
+4. PlannerSummary.js - Weekly summary view
+
+All production-ready React with planning tools.
+
+Return ONLY JSON with "files" array."""
+
+response = client.messages.create(
+    model="claude-opus-4-20250805",
+    max_tokens=10000,
+    messages=[{"role": "user", "content": prompt}]
+)
+
+text = response.content[0].text
+match = re.search(r'\{[\s\S]*\}', text)
+if match:
+    data = json.loads(match.group())
+    for f in data.get("files", []):
+        p = Path(f["path"])
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(f["content"])
+    print(f"✅ Frontend: {len(data.get('files', []))} files")
+FRONTEND
+    
+    - name: Commit and Push
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git add .
+        git commit -m "chore: generate Week 6 features" || true
+        git push origin week-6-features
+    
+    - name: Create PR
+      uses: actions/create-pull-request@v5
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        title: "📅 Week 6: Weekly Planner Enhancements"
+        body: "Week 6 features: Planner optimization, resource allocation, conflict detection"
+        branch: week-6-features
