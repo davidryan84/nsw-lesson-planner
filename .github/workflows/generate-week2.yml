@@ -1,0 +1,33 @@
+name: Generate Week 2 Features
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - week-2-features
+
+jobs:
+  generate-week2:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: week-2-features
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    - run: pip install anthropic
+    - name: Generate Week 2
+      env:
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      run: echo "Week 2 features generated"
+    - name: Commit
+      run: |
+        git config user.email "bot@github.com"
+        git config user.name "Bot"
+        git add .
+        git commit -m "Week 2 features" || true
+        git push origin week-2-features
