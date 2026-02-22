@@ -1,0 +1,132 @@
+name: Generate Week 5 Features
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - week-5-features
+    paths:
+      - '.github/workflows/generate-week5.yml'
+
+jobs:
+  generate-week5:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: week-5-features
+    
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - run: pip install anthropic --break-system-packages
+    
+    - name: Generate Week 5 Backend
+      env:
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      run: |
+        python3 << 'BACKEND'
+import os, json, re
+from pathlib import Path
+from anthropic import Anthropic
+
+client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+print("🤖 Generating Week 5 Backend...")
+
+prompt = """Generate Week 5 backend - Student Progress Dashboards.
+
+Return ONLY valid JSON with "files" array.
+
+Generate in backend/services/:
+1. progress_dashboard_service.py - Calculate progress metrics
+2. student_performance_service.py - Track student performance
+3. analytics_service.py - Generate analytics data
+
+Generate in backend/api/v1/:
+1. progress_dashboards.py - Progress endpoints
+2. student_analytics.py - Analytics endpoints
+
+All production-ready with full docstrings.
+
+Return ONLY JSON with "files" array."""
+
+response = client.messages.create(
+    model="claude-opus-4-20250805",
+    max_tokens=10000,
+    messages=[{"role": "user", "content": prompt}]
+)
+
+text = response.content[0].text
+match = re.search(r'\{[\s\S]*\}', text)
+if match:
+    data = json.loads(match.group())
+    for f in data.get("files", []):
+        p = Path(f["path"])
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(f["content"])
+    print(f"✅ Backend: {len(data.get('files', []))} files")
+BACKEND
+    
+    - name: Generate Week 5 Frontend
+      env:
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      run: |
+        python3 << 'FRONTEND'
+import os, json, re
+from pathlib import Path
+from anthropic import Anthropic
+
+client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+print("🤖 Generating Week 5 Frontend...")
+
+prompt = """Generate Week 5 frontend - Student Progress Dashboards.
+
+Return ONLY valid JSON with "files" array.
+
+Generate in frontend/src/components/dashboard/:
+1. ProgressChart.js - Visual progress chart
+2. StudentStatsCard.js - Student performance card
+3. OutcomeTracking.js - NESA outcome progress
+4. ClassAnalytics.js - Class-wide analytics
+
+All production-ready React with charts and graphs.
+
+Return ONLY JSON with "files" array."""
+
+response = client.messages.create(
+    model="claude-opus-4-20250805",
+    max_tokens=10000,
+    messages=[{"role": "user", "content": prompt}]
+)
+
+text = response.content[0].text
+match = re.search(r'\{[\s\S]*\}', text)
+if match:
+    data = json.loads(match.group())
+    for f in data.get("files", []):
+        p = Path(f["path"])
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(f["content"])
+    print(f"✅ Frontend: {len(data.get('files', []))} files")
+FRONTEND
+    
+    - name: Commit and Push
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git add .
+        git commit -m "chore: generate Week 5 features" || true
+        git push origin week-5-features
+    
+    - name: Create PR
+      uses: actions/create-pull-request@v5
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        title: "📊 Week 5: Student Progress Dashboards"
+        body: "Week 5 features: Progress tracking, student analytics, class insights"
+        branch: week-5-features
