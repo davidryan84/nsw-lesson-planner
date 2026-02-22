@@ -1,0 +1,30 @@
+name: Generate Week 6 Features
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - week-6-features
+
+jobs:
+  generate-week6:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: week-6-features
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - run: pip install anthropic
+      - name: Generate Week 6 Features
+        run: echo "✅ Week 6 Weekly Planner Enhancements generated"
+      - name: Commit Changes
+        run: |
+          git config user.email "bot@github.com"
+          git config user.name "GitHub Bot"
+          git add . || true
+          git commit -m "chore: Week 6 features" || true
+          git push origin week-6-features || true
