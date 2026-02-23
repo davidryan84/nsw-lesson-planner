@@ -1,36 +1,101 @@
-import React, { useState } from 'react';
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import React, { useContext } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthContext, AuthProvider } from './context/AuthContext';
+import './App.css';
+
+// Pages
 import LoginPage from './pages/LoginPage';
-import DashboardPage from './pages/DashboardPage';
-import './styles/index.css';
+import RegisterPage from './pages/RegisterPage';
+import Dashboard from './pages/Dashboard';
+import LearningExperiences from './pages/LearningExperiences';
+import WeeklyPlanner from './pages/WeeklyPlanner';
+import WorksheetGenerator from './pages/WorksheetGenerator';
+import EvidenceTracker from './pages/EvidenceTracker';
+import ProgressDashboard from './pages/ProgressDashboard';
+import ClassPacing from './pages/ClassPacing';
+
+// Protected Route Component
+const ProtectedRoute = ({ children }) => {
+  const { user, loading } = useContext(AuthContext);
+  
+  if (loading) return <div>Loading...</div>;
+  if (!user) return <Navigate to="/login" />;
+  
+  return children;
+};
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-
   return (
-    <BrowserRouter>
-      <div className="app">
-        {isAuthenticated && (
-          <nav className="navbar" style={{ backgroundColor: '#2D8B3D' }}>
-            <div className="nav-container">
-              <Link to="/" className="nav-logo">NSW Lesson Planner</Link>
-              <button onClick={() => {
-                setIsAuthenticated(false);
-                setCurrentUser(null);
-              }}>Logout</button>
-            </div>
-          </nav>
-        )}
-        
+    <Router>
+      <AuthProvider>
         <Routes>
+          {/* Public routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          
+          {/* Protected routes */}
           <Route 
             path="/" 
-            element={isAuthenticated ? <DashboardPage user={currentUser} /> : <LoginPage setAuth={setIsAuthenticated} setUser={setCurrentUser} />}
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } 
           />
+          <Route 
+            path="/learning-experiences" 
+            element={
+              <ProtectedRoute>
+                <LearningExperiences />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/planner" 
+            element={
+              <ProtectedRoute>
+                <WeeklyPlanner />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/worksheets/:lessonId" 
+            element={
+              <ProtectedRoute>
+                <WorksheetGenerator />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/evidence" 
+            element={
+              <ProtectedRoute>
+                <EvidenceTracker />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/progress" 
+            element={
+              <ProtectedRoute>
+                <ProgressDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/pacing" 
+            element={
+              <ProtectedRoute>
+                <ClassPacing />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Catch all */}
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
-      </div>
-    </BrowserRouter>
+      </AuthProvider>
+    </Router>
   );
 }
 

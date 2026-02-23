@@ -3,24 +3,33 @@ import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import '../styles/Auth.css';
 
-function LoginPage() {
+function RegisterPage() {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useContext(AuthContext);
+  const { register } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
 
-    const success = await login(email, password);
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setLoading(true);
+    const success = await register(firstName, lastName, email, password);
+    
     if (success) {
       navigate('/');
     } else {
-      setError('Login failed. Please check your credentials.');
+      setError('Registration failed. Please try again.');
     }
     
     setLoading(false);
@@ -30,11 +39,31 @@ function LoginPage() {
     <div className="auth-container">
       <div className="auth-box">
         <h1>NSW Lesson Planner</h1>
-        <h2>Teacher Login</h2>
+        <h2>Teacher Registration</h2>
         
         {error && <div className="error-message">{error}</div>}
         
         <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>First Name</label>
+            <input
+              type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <label>Last Name</label>
+            <input
+              type="text"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              required
+            />
+          </div>
+          
           <div className="form-group">
             <label>Email</label>
             <input
@@ -55,21 +84,31 @@ function LoginPage() {
             />
           </div>
           
+          <div className="form-group">
+            <label>Confirm Password</label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+            />
+          </div>
+          
           <button 
             type="submit" 
             className="btn btn-primary btn-block"
             disabled={loading}
           >
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? 'Registering...' : 'Register'}
           </button>
         </form>
         
         <p className="auth-link">
-          Don't have an account? <Link to="/register">Register here</Link>
+          Already have an account? <Link to="/login">Login here</Link>
         </p>
       </div>
     </div>
   );
 }
 
-export default LoginPage;
+export default RegisterPage;
