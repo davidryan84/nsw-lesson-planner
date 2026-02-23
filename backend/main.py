@@ -6,13 +6,14 @@ Creates and configures the Flask app with all blueprints and extensions
 from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-from flask_sqlalchemy import SQLAlchemy
 import logging
 from logging.handlers import RotatingFileHandler
 import os
 
-# Initialize extensions
-db = SQLAlchemy()
+# Import database AFTER defining it
+from backend.core.database import db
+
+# Initialize JWT
 jwt = JWTManager()
 
 def create_app(config_name='development'):
@@ -43,15 +44,25 @@ def create_app(config_name='development'):
     jwt.init_app(app)
     CORS(app)
     
-    # Register blueprints
+    # Register blueprints and create tables
     with app.app_context():
-        from backend.api.v1 import auth_bp, worksheets_bp, students_bp, evidence_bp, health_bp
+        # Import models AFTER db is initialized
+        from backend.models.teacher import Teacher
+        from backend.models.student import Student
+        from backend.models.worksheet import Worksheet
+        from backend.models.learning_experience import LearningExperience
+        from backend.models.lesson import Lesson
+        
+        from backend.api.v1 import (auth_bp, worksheets_bp, students_bp, 
+                                    evidence_bp, health_bp, le_bp, lessons_bp)
         
         app.register_blueprint(health_bp)
         app.register_blueprint(auth_bp)
         app.register_blueprint(worksheets_bp)
         app.register_blueprint(students_bp)
         app.register_blueprint(evidence_bp)
+        app.register_blueprint(le_bp)
+        app.register_blueprint(lessons_bp)
         
         # Create database tables
         db.create_all()

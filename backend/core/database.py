@@ -7,6 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import uuid
 
+# Create SQLAlchemy instance (will be initialized in app factory)
 db = SQLAlchemy()
 
 class BaseModel(db.Model):
