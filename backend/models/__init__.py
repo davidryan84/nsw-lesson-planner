@@ -5,6 +5,8 @@ from backend.models.worksheet import Worksheet
 from backend.models.worksheet_question import WorksheetQuestion
 from backend.models.learning_experience import LearningExperience
 from backend.models.lesson import Lesson
+from backend.models.evidence import Evidence
+from backend.models.student_progress import StudentProgress
 
 __all__ = [
     'Teacher', 
@@ -12,5 +14,7 @@ __all__ = [
     'Worksheet',
     'WorksheetQuestion',
     'LearningExperience',
-    'Lesson'
+    'Lesson',
+    'Evidence',
+    'StudentProgress'
 ]
