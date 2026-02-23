@@ -50,11 +50,13 @@ def create_app(config_name='development'):
         from backend.models.teacher import Teacher
         from backend.models.student import Student
         from backend.models.worksheet import Worksheet
+        from backend.models.worksheet_question import WorksheetQuestion
         from backend.models.learning_experience import LearningExperience
         from backend.models.lesson import Lesson
         
         from backend.api.v1 import (auth_bp, worksheets_bp, students_bp, 
                                     evidence_bp, health_bp, le_bp, lessons_bp)
+        from backend.api.v1.worksheets_routes import worksheets_routes_bp
         
         app.register_blueprint(health_bp)
         app.register_blueprint(auth_bp)
@@ -63,6 +65,7 @@ def create_app(config_name='development'):
         app.register_blueprint(evidence_bp)
         app.register_blueprint(le_bp)
         app.register_blueprint(lessons_bp)
+        app.register_blueprint(worksheets_routes_bp)
         
         # Create database tables
         db.create_all()
