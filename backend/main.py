@@ -60,6 +60,7 @@ def create_app(config_name='development'):
                                     evidence_bp, health_bp, le_bp, lessons_bp)
         from backend.api.v1.worksheets_routes import worksheets_routes_bp
         from backend.api.v1.evidence_routes import evidence_routes_bp
+        from backend.api.v1.support_files_routes import support_files_bp
         
         app.register_blueprint(health_bp)
         app.register_blueprint(auth_bp)
@@ -70,6 +71,7 @@ def create_app(config_name='development'):
         app.register_blueprint(lessons_bp)
         app.register_blueprint(worksheets_routes_bp)
         app.register_blueprint(evidence_routes_bp)
+        app.register_blueprint(support_files_bp)
         
         # Create database tables
         db.create_all()
